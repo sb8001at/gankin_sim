@@ -1,5 +1,5 @@
 if(!require(pacman)){install.packages("pacman")}
-p_load(shiny, shinythemes, tidyverse, DT)
+pacman::p_load(shiny, shinythemes, tidyverse, DT)
 
 # mm_3lot <- mean(c(param1[1], param2[1], param3[1])) # 代表値
 
