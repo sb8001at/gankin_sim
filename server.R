@@ -4,7 +4,7 @@ function(input, output, session) {
   svar_3lot <- reactive({return(calc_var(input$lot1sd, input$lot2sd, input$lot3sd, input$n_sample))})
   ssd_3lot <- reactive({return((svar_3lot() ^ 0.5))})
   ms_3lot <- reactive({return(ssd_3lot() / input$n_sample ^ 0.5)})
-  sixsigma <- reactive({return((ssd_3lot() * 3))})
+  sixsigma <- reactive({return((ssd_3lot() * 3))}) # 名前はsixsigmaだが，開発中に3sigmaになっている．
   m_seq <- reactive({return(m_seq_fn(mm_3lot(), sixsigma()))})
   s_seq <- reactive({return(s_seq_fn(sixsigma()))})
   
