@@ -122,7 +122,7 @@ function(input, output, session) {
       sim_u[[2]], 
       rownames=FALSE, 
       options = list(dom="t", autoWidth = F),
-      colnames=c("ロット名", "平均値", "標準偏差", "最大値", "最小値", "3σ上限", "3σ加減", "判定値")
+      colnames=c("ロット名", "平均値", "標準偏差", "最大値", "最小値", "3σ上限", "3σ下限", "判定値")
     )
     
     output$sim_3lot_plot <- renderPlot(
