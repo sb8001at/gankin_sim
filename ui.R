@@ -72,6 +72,19 @@ navbarPage(
         actionButton(
           "runCalc",
           label = "計算を行う"
+        ),
+        
+        tags$footer(
+          br(),
+          br(),
+          tags$a(href="https://github.com/sb8001at/gankin_sim", "sb8001at/gankin_sim"),
+          tags$a(href = "https://github.com/sb8001at/gankin_sim", icon("github")),
+          br(),
+          br(),
+          tags$a(href = "https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja", tags$img(src = "https://upload.wikimedia.org/wikipedia/commons/1/12/Cc-by-nc-sa_icon.svg", width="10%")),
+          br(),
+          tags$a(href = "https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja", "クリエイティブ・コモンズ CC BY-NC-SA"),
+          tags$p("に従い，複製、頒布、展示、実演を行うにあたり、著作権者の表示を要求し、非営利目的での利用に限定し、作品を改変・変形・加工してできた作品についても、元になった作品と同じライセンスを継承させた上で頒布を認めます。")
         )
       ),
       
