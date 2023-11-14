@@ -268,4 +268,26 @@ function(input, output, session) {
     plot(x=(((sig[-1] + sig[-length(sig)])/2)^0.5)[-1], y=-diff(((sig[-1] + sig[-length(sig)])/2)^0.5), xlab="母標準偏差", ylab="母標準偏差の横の幅", ylim=c(0, 0.01), type="l")
   })   
   
+  output$dist_psd_r_dist <- renderPlot({
+    # サンプル数
+    n = 10
+    # 標本標準偏差
+    s = 2
+    # 偏差平方和（分散 × 自由度）
+    ss <- s ^ 2 * (n-1)
+    # 確率を示す数値
+    s_seq <- seq(0.0001, 1, by=0.0001)
+    # 自由度n-1の累積確率密度（偏差平方和/母分散の累積確率密度）
+    q_chisq <- qchisq(s_seq, n-1)
+    # 母分散の累積確率密度（上のq_chisqと偏差平方和から計算）
+    sig <- ss/q_chisq
+    
+    temp <- calc_psd(10, 2)
+    samplep <- sample_psd(temp, 9000)
+    
+    hist(samplep, xlim=c(0, 7), xlab="", ylab="")
+    par(new=T)
+    plot(((sig[-1] + sig[-length(sig)])/2)^0.5, -diff(s_seq)/diff(sig), type="l", xlim=c(0, 7), xlab="", ylab="")
+  })   
+  
 }
