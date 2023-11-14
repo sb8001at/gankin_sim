@@ -1,22 +1,13 @@
 if(!require(pacman)){install.packages("pacman")}
-pacman::p_load(shiny, shinythemes, tidyverse, DT)
+p_load(shiny, shinythemes, tidyverse, DT)
 
 # mm_3lot <- mean(c(param1[1], param2[1], param3[1])) # 代表値
 
 # svar_3lot <- (param1[2]^2 * n + param2[2]^2 * n + param3[2]^2 * n) / 3 / n # 下の関数とおなじ
 # ssd_3lot <- svar_3lot ^ 0.5 # 分散から標準偏差の代表値を得る
 
-## 分散から3ロット平均の分散を得る
-calc_var <- function(x, y, z, n){
-  (x^2 +y^2 + z^2) / 3
-}
-
 m_seq_fn <- function(mm_3lot, sixsigma){
   seq(mm_3lot - 2 * sixsigma, mm_3lot + 2 * sixsigma, by = 0.1)
-}
-
-s_seq_fn <- function(sixsigma){
-  seq(0.0001, sixsigma * 3, by = 0.025)
 }
 
 ## 平均値と標準偏差の期待分布をデータフレームとする
@@ -24,11 +15,25 @@ df_meandist <- function(m_seq, mm_3lot, ssd_3lot){
   tibble(val = m_seq, dn = dnorm(m_seq, mean=mm_3lot, sd=ssd_3lot), pn = pnorm(m_seq, mean=mm_3lot, sd=ssd_3lot))
 }
 
-## 分散（sd^2）がカイ二乗分布することから，標準偏差の分布をカイ二乗分布から計算する
-## 分散におけるカイ二乗分布の代表値は，3ロットのsdから計算した分散の代表値（svar_3lot）．
-## 標準偏差は分散の平方根なので，valを分散の平方根とする
-df_sddist <- function(s_seq, svar_3lot){
-  tibble(val = s_seq ^ 0.5, dc = dchisq(s_seq, df = svar_3lot), pc = pchisq(s_seq, df = svar_3lot))
+## 分散の計算は複雑なので、以下の関数を用いて計算する
+# 母分散の確率密度関数を得る関数
+calc_psd <- function(n, s){ # nはサンプル数，sは不偏標準偏差
+  ss <- s ^ 2 * (n-1) # 偏差平方和（分散 × 自由度）
+  s_seq <- seq(0.0001, 1, by=0.0001) %>% round(4) # 確率の数列
+  q_chisq <- qchisq(s_seq, n-1) # 自由度n-1の累積確率密度
+  
+  sig <- ss/q_chisq # 母分散の累積確率密度
+  
+  df_qchisq <- tibble(prob_ = s_seq, var_ = sig) # 確率と累積確率密度の関係（確率から推定範囲を計算できる）
+  
+  df_psd <- tibble(psd = ((sig[-1] + sig[-length(sig)])/2)^0.5, prob_ = (-diff(s_seq)/diff(sig))/sum((-diff(s_seq)/diff(sig))))
+  
+  return(list(df_qchisq, df_psd))
+}
+
+# 母分散の確率密度関数からサンプリングする関数（lstはcalc_psdの返り値）
+sample_psd <- function(d_l, n_ = 3){
+  sample(x = d_l[[2]] %>% .[,1] %>% unlist() , size=n_ , prob = d_l[[2]] %>% .[,2] %>% unlist())
 }
 
 
@@ -41,7 +46,7 @@ df_meandist_plot <- function(m_seq, mm_3lot, ssd_3lot){
       col_3s = if_else(pn > pnorm(-3) & pn < pnorm(+3), dn, NA))
   
   ggplot() +
-    geom_area(aes(x=val, y=dn), color="black", fill="#2B5D59", data = d_m) +
+    geom_area(aes(x=val, y=dn), color=NA, fill="#2B5D59", data = d_m) +
     geom_area(aes(x=val, y=col_3s), color=NA, fill="#44968F", data = d_m |> filter(!is.na(col_3s))) +
     geom_area(aes(x=val, y=col_99), color=NA, fill="#56bcb3", data = d_m |> filter(!is.na(col_99))) +
     geom_area(aes(x=val, y=col_95), color=NA, fill="#99D6D1", data = d_m |> filter(!is.na(col_95))) +
@@ -53,26 +58,28 @@ df_meandist_plot <- function(m_seq, mm_3lot, ssd_3lot){
     theme_light()
 }
 
-df_sddist_plot <- function(s_seq, svar_3lot, ssd_3lot){
-  d_s <- df_sddist(s_seq, svar_3lot) |> 
+
+df_sddist_plot <- function(d_l, intr, ssd_3lot){
+  d_s <-  d_l[[2]] %>% 
     mutate(
-      col_90 = if_else(pc > 0.05 & pc < 0.95, dc, NA),
-      col_95 = if_else(pc > 0.025 & pc < 0.975, dc, NA),
-      col_99 = if_else(pc > 0.005 & pc < 0.995, dc, NA))
+      col_90 = if_else((psd < intr$col_90 %>% na.omit() %>% .[1]) & (psd > intr$col_90 %>% na.omit() %>% .[2]), psd, NA),
+      col_95 = if_else((psd < intr$col_95 %>% na.omit() %>% .[1]) & (psd > intr$col_95 %>% na.omit() %>% .[2]), psd, NA),
+      col_99 = if_else((psd < intr$col_99 %>% na.omit() %>% .[1]) & (psd > intr$col_99 %>% na.omit() %>% .[2]), psd, NA)) %>%
+    slice(c(1, 1:100 * 100))
   
   ggplot() +
-    geom_area(aes(x=val, y=dc), color="black", fill="#2B5D59", data = d_s) +
-    geom_area(aes(x=val, y=col_99), color=NA, fill="#56bcb3", data = d_s |> filter(!is.na(col_99))) +
-    geom_area(aes(x=val, y=col_95), color=NA, fill="#99D6D1", data = d_s |> filter(!is.na(col_95))) +
-    geom_area(aes(x=val, y=col_90), color=NA, fill="#BBE4E0", data = d_s |> filter(!is.na(col_90))) +
+    geom_area(aes(x=psd, y=prob_), color=NA, fill="#2B5D59", data = d_s) +
+    geom_area(aes(x=psd, y=prob_), color=NA, fill="#56bcb3", data = d_s |> filter(!is.na(col_99))) +
+    geom_area(aes(x=psd, y=prob_), color=NA, fill="#99D6D1", data = d_s |> filter(!is.na(col_95))) +
+    geom_area(aes(x=psd, y=prob_), color=NA, fill="#BBE4E0", data = d_s |> filter(!is.na(col_90))) +
     geom_vline(xintercept=ssd_3lot, color="red", linewidth=0.1)+
     labs(x="各ロットの含量の標準偏差（%）", y="確率密度")+
     theme_light()
 }
 
-control_chart_fn <- function(mm_3lot, ms_3lot, svar_3lot){
+control_chart_fn <- function(mm_3lot, ms_3lot, d_l){
   # 100ロット製造時の個々の値
-  sample100 <- replicate(100, rnorm(10, rnorm(1, mm_3lot, ms_3lot), rchisq(1, svar_3lot) ^ 0.5))
+  sample100 <- replicate(100, rnorm(10, rnorm(1, mm_3lot, ms_3lot), sample_psd(d_l, 1)))
   
   # 期待される工程管理図
   control_chart <- tibble(
@@ -112,9 +119,9 @@ control_chart_fn <- function(mm_3lot, ms_3lot, svar_3lot){
 # (sample100 < 95 | sample100 > 105) |> as.vector() |> sum() / 1000
 
 # 3ロットのシミュレーション
-sim_uniform <- function(mm_3lot, ms_3lot, svar_3lot){
+sim_uniform <- function(mm_3lot, ms_3lot, d_l){
   sim_m <- rnorm(3, mm_3lot, ms_3lot) # 平均値
-  sim_s <- rchisq(3, svar_3lot) ^ 0.5 # 標準偏差
+  sim_s <- sample_psd(d_l) # 標準偏差
   
   sim_result <- 
     mapply(rnorm, 10, sim_m, sim_s) |> 
@@ -136,5 +143,3 @@ sim_uniform <- function(mm_3lot, ms_3lot, svar_3lot){
   
   list(sim_result, sim_summary)
 }
-
-
