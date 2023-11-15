@@ -65,7 +65,7 @@ df_sddist_plot <- function(d_l, intr, ssd_3lot){
       col_90 = if_else((psd < intr$col_90 %>% na.omit() %>% .[1]) & (psd > intr$col_90 %>% na.omit() %>% .[2]), psd, NA),
       col_95 = if_else((psd < intr$col_95 %>% na.omit() %>% .[1]) & (psd > intr$col_95 %>% na.omit() %>% .[2]), psd, NA),
       col_99 = if_else((psd < intr$col_99 %>% na.omit() %>% .[1]) & (psd > intr$col_99 %>% na.omit() %>% .[2]), psd, NA)) %>%
-    slice(c(1, 1:100 * 100))
+    slice(c(1, 1:100 * 99, 9901:10000))
   
   ggplot() +
     geom_area(aes(x=psd, y=prob_), color=NA, fill="#2B5D59", data = d_s) +
