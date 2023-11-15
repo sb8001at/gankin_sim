@@ -26,7 +26,7 @@ calc_psd <- function(n, s){ # nはサンプル数，sは不偏標準偏差
   
   df_qchisq <- tibble(prob_ = s_seq, var_ = sig) # 確率と累積確率密度の関係（確率から推定範囲を計算できる）
   
-  df_psd <- tibble(psd = ((sig[-1] + sig[-length(sig)])/2)^0.5, prob_ = (-diff(s_seq)/diff(sig))/sum((-diff(s_seq)/diff(sig))))
+  df_psd <- tibble(psd = ((sig[-1] + sig[-length(sig)])/2)^0.5, prob_ = (-diff(s_seq)/diff(sig)))
   
   return(list(df_qchisq, df_psd))
 }
