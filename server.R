@@ -86,7 +86,9 @@ function(input, output, session) {
           "</span>%です。")
       )      
     )
-    
+  })
+  
+  observeEvent(input$runCalcsd, {
     output$sddist_plot <- renderPlot(
       df_sddist_plot(d_l(), intr(), ssd_3lot())
     )
@@ -94,7 +96,7 @@ function(input, output, session) {
     output$sddist_90 <- renderText(
       paste0(
         "90%のロットでは標準偏差は<span style=\"color:#99D6D1;font-weight:bold;\">", 
-       round(intr()$col_90 %>% na.omit() %>% .[1], digits=2), "～", round(intr()$col_90 %>% na.omit() %>% .[2], digits=2), 
+        round(intr()$col_90 %>% na.omit() %>% .[1], digits=2), "～", round(intr()$col_90 %>% na.omit() %>% .[2], digits=2), 
         "</span>%の範囲に含まれます。"
       )
     )
