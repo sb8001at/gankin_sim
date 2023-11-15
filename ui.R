@@ -69,11 +69,6 @@ navbarPage(
           )
         ),
         
-        actionButton(
-          "runCalc",
-          label = "計算を行う"
-        ),
-        
         tags$footer(
           br(),
           br(),
@@ -86,7 +81,7 @@ navbarPage(
           tags$a(href = "https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja", "クリエイティブ・コモンズ CC BY-NC-SA"),
           tags$p("に従い，複製、頒布、展示、実演を行うにあたり、著作権者の表示を要求し、非営利目的での利用に限定し、作品を改変・変形・加工してできた作品についても、元になった作品と同じライセンスを継承させた上で頒布を認めます。"),
           br(),
-          tags$p("shinyapps.ioから使用すると、月25時間までしか使用できません。以下のコードでRからシミュレーターを立ち上げて下さい。"),
+          tags$p("shinyapps.ioから使用すると、月50時間までしか使用できません。以下のコードでRからシミュレーターを立ち上げて下さい。"),
           tags$p("if(!require(shiny)){install.packages(\"shiny\")}"),
           tags$p("shiny::runGitHub(\"sb8001at/gankin_sim\")")
         )
@@ -97,6 +92,11 @@ navbarPage(
           type = "tabs",
           tabPanel(
             "含量分布",
+            br(),
+            actionButton(
+              "runCalc",
+              label = "含量分布の計算を行う"
+            ),
             h2("含量の分布"),
             plotOutput("meandist_plot"),
             uiOutput("meandist_90"),
@@ -111,6 +111,11 @@ navbarPage(
           ),
           tabPanel(
             "含量標準偏差の分布",
+            br(),
+            actionButton(
+              "runCalcsd",
+              label = "標準偏差の分布の計算を行う"
+            ),
             h2("含量の標準偏差の分布"),
             plotOutput("sddist_plot"),
             uiOutput("sddist_90"),
